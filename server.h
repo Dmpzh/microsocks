@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
 
 #pragma RcB2 DEP "server.c"
 
@@ -41,6 +43,7 @@ struct server {
 int resolve(const char *host, unsigned short port, struct addrinfo** addr);
 int resolve_sa(const char *host, unsigned short port, union sockaddr_union *res);
 int bindtoip(int fd, union sockaddr_union *bindaddr);
+char *retrieve_interface(struct sockaddr_in *to_found);
 
 int server_waitclient(struct server *server, struct client* client);
 int server_setup(struct server *server, const char* listenip, unsigned short port);

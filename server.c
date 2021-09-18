@@ -31,6 +31,27 @@ int bindtoip(int fd, union sockaddr_union *bindaddr) {
 	return 0;
 }
 
+char *retrieve_interface(struct sockaddr_in *to_found) {
+	char *name;
+	struct ifaddrs *addrs, *iap;
+	struct sockaddr_in *sa;
+
+	getifaddrs(&addrs);
+	for (iap = addrs; iap != NULL; iap = iap->ifa_next)	{
+		if (iap->ifa_addr && iap->ifa_addr->sa_family == AF_INET)
+		{
+			sa = (struct sockaddr_in *)(iap->ifa_addr);
+			if (sa->sin_addr.s_addr == to_found->sin_addr.s_addr)
+			{
+				name = strdup(iap->ifa_name);
+				break;
+			}
+		}
+	}
+	freeifaddrs(addrs);
+	return name;
+}
+
 int server_waitclient(struct server *server, struct client* client) {
 	socklen_t clen = sizeof client->addr;
 	return ((client->fd = accept(server->fd, (void*)&client->addr, &clen)) == -1)*-1;

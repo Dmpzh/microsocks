@@ -165,8 +165,16 @@ static int connect_socks_target(unsigned char *buf, size_t n, struct client *cli
 			return -EC_GENERAL_FAILURE;
 		}
 	}
-	if(SOCKADDR_UNION_AF(&bind_addr) != AF_UNSPEC && bindtoip(fd, &bind_addr) == -1)
-		goto eval_errno;
+	char *interface_name;
+	if(SOCKADDR_UNION_AF(&bind_addr) != AF_UNSPEC)
+	{
+		if (!(interface_name = retrieve_interface(&bind_addr))
+			goto eval_errno;
+		int result = setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen(interface_name));
+		free(interface_name);
+		if (result == -1)
+			goto eval_errno;
+	}		
 	if(connect(fd, remote->ai_addr, remote->ai_addrlen) == -1)
 		goto eval_errno;
 
