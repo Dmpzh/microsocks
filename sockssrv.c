@@ -168,7 +168,7 @@ static int connect_socks_target(unsigned char *buf, size_t n, struct client *cli
 	char *interface_name;
 	if(SOCKADDR_UNION_AF(&bind_addr) != AF_UNSPEC)
 	{
-		if (!(interface_name = retrieve_interface(&bind_addr))
+		if (!(interface_name = retrieve_interface(&bind_addr)))
 			goto eval_errno;
 		int result = setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, strlen(interface_name));
 		free(interface_name);
