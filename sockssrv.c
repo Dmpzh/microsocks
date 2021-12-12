@@ -36,6 +36,12 @@
 #include "server.h"
 #include "sblist.h"
 
+/* timeout in microseconds on resource exhaustion to prevent excessive
+   cpu usage. */
+#ifndef FAILURE_TIMEOUT
+#define FAILURE_TIMEOUT 64
+#endif
+
 #ifndef MAX
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #endif
@@ -447,14 +453,19 @@ int main(int argc, char** argv) {
 		struct thread *curr = malloc(sizeof (struct thread));
 		if(!curr) goto oom;
 		curr->done = 0;
-		if(server_waitclient(&s, &c)) continue;
+		if(server_waitclient(&s, &c)) {
+			dolog("failed to accept connection\n");
+			free(curr);
+			usleep(FAILURE_TIMEOUT);
+			continue;
+		}
 		curr->client = c;
 		if(!sblist_add(threads, &curr)) {
 			close(curr->client.fd);
 			free(curr);
 			oom:
 			dolog("rejecting connection due to OOM\n");
-			usleep(16); /* prevent 100% CPU usage in OOM situation */
+			usleep(FAILURE_TIMEOUT); /* prevent 100% CPU usage in OOM situation */
 			continue;
 		}
 		pthread_attr_t *a = 0, attr;
